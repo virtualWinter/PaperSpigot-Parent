@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import org.github.paperspigot.event.ServerExceptionEvent;
+import org.github.paperspigot.exception.ServerPluginMessageException;
 
 /**
  * Standard implementation to {@link Messenger}
@@ -427,7 +429,13 @@ public class StandardMessenger implements Messenger {
                 registration.getListener().onPluginMessageReceived( channel, source, message );
             } catch ( Throwable t )
             {
-                org.bukkit.Bukkit.getLogger().log( java.util.logging.Level.WARNING, "Could not pass incoming plugin message to " + registration.getPlugin(), t );
+                // Paper start
+                String msg = "Could not pass incoming plugin message to " + registration.getPlugin();
+                org.bukkit.Bukkit.getLogger().log( java.util.logging.Level.WARNING, msg, t );
+                source.getServer().getPluginManager().callEvent(new ServerExceptionEvent(
+                        new ServerPluginMessageException(msg, t, registration.getPlugin(), source, channel, message)
+                ));
+                // Paper end
             }
             // Spigot End
         }

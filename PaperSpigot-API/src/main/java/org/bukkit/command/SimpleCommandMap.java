@@ -17,6 +17,9 @@ import org.bukkit.Server;
 import org.bukkit.command.defaults.*;
 import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
+import org.github.paperspigot.event.ServerExceptionEvent;
+import org.github.paperspigot.exception.ServerCommandException;
+import org.github.paperspigot.exception.ServerTabCompleteException;
 
 public class SimpleCommandMap implements CommandMap {
     private static final Pattern PATTERN_ON_SPACE = Pattern.compile(" ", Pattern.LITERAL);
@@ -147,7 +150,9 @@ public class SimpleCommandMap implements CommandMap {
             throw ex;
         } catch (Throwable ex) {
             target.timings.stopTiming(); // Spigot
-            throw new CommandException("Unhandled exception executing '" + commandLine + "' in " + target, ex);
+            String msg = "Unhandled exception executing '" + commandLine + "' in " + target;
+            server.getPluginManager().callEvent(new ServerExceptionEvent(new ServerCommandException(ex, target, sender, args))); // Paper
+            throw new CommandException(msg, ex);
         }
 
         // return true as command was handled
@@ -224,7 +229,9 @@ public class SimpleCommandMap implements CommandMap {
         } catch (CommandException ex) {
             throw ex;
         } catch (Throwable ex) {
-            throw new CommandException("Unhandled exception executing tab-completer for '" + cmdLine + "' in " + target, ex);
+            String msg = "Unhandled exception executing tab-completer for '" + cmdLine + "' in " + target;
+            server.getPluginManager().callEvent(new ServerExceptionEvent(new ServerTabCompleteException(msg, ex, target, sender, args))); // Paper
+            throw new CommandException(msg, ex);
         }
     }
     // PaperSpigot end
